@@ -71,7 +71,6 @@ ln -s /opt/apache-jmeter-5.6.3/bin/jmeter /usr/local/bin/jmeter
 
 ## Results & Reports
 - Raw results: `results/`
-- HTML report: `results`
 
 ## Analyzation
 Analyze the resource utilization http://localhost:9091/containers/
