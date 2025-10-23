@@ -50,9 +50,8 @@ Spike Testing
     Key Metrics: Response time spikes, error rate, recovery time.
 # Tool Choosen
  - Jmeter - Open Source Tool
- - 
-## Setup
 
+## Setup
 ### 1️⃣ Docker Setup
 Docker allows you to run HTTPBin in an isolated container, ensuring consistent API behavior regardless of your host environment.
 Steps:
@@ -74,11 +73,12 @@ ln -s /opt/apache-jmeter-5.6.3/bin/jmeter /usr/local/bin/jmeter
 - Raw results: `results/`
 - HTML report: `results`
 
+## Analyzation
+Analyze the resource utilization http://localhost:9091/containers/
+    1. CPU usage
+    2. Memory usage
+    3. Throughput
+    4. Error
 
-
-
-
-# Approach:
-
-
-
+🏁 Next Steps Integrate with CI/CD (e.g., Jenkins) for automated performance runs Add custom assertions & SLAs in the JMeter test plan Extend coverage to more endpoints or advanced scenarios
+    
