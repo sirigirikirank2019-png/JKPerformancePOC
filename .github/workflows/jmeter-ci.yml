@@ -7,19 +7,55 @@ on:
   pull_request:
 
 jobs:
-  run-jmeter:
+   # Step 1: Checkout code
+  start-httpbin:
     runs-on: ubuntu-latest
-    container:
-      image: justb4/jmeter:5.6.3
-      options: --user root
-
+    services:
+      httpbin:
+        image: kennethreitz/httpbin
+        ports:
+          - 91:80
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
+      - name: Wait for httpbin to start
+        run: |
+          echo "Waiting for httpbin to be ready..."
+          sleep 5
+      # Step 2: Launch on Browser
+      - name: Test httpbin endpoint
+        run: |
+          curl http://localhost:91/get
+      - name: Run command inside container
+        run: |
+          # Instead of interactive bash, run commands non-interactively
+          docker exec httpbin bash -c "echo 'Inside container'; ls /; cat /etc/hosts"
+      # Step 3: Create Directories and copy file to local
+      - name: Copy results back to local system
+        run: |
+          mkdir -p ./output
+          docker cp httpbin:/tmp/output ./output
+      
+  install-jmeter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      # Step 4: Install Java in Container
+      - name: Install Java, wget, unzip
+        run: |
+          sudo apt update
+          sudo apt install -y openjdk-11-jre wget unzip
+      # Step 5: Install Jmeter in Container
+      - name: Download and install Apache JMeter
+        run: |
+          wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.zip
+          sudo unzip apache-jmeter-5.6.3.zip -d /opt/
+          sudo ln -s /opt/apache-jmeter-5.6.3/bin/jmeter /usr/local/bin/jmeter
 
-      - name: List repository files
-        run: ls -l
-
+      - name: Verify JMeter installation
+        run: jmeter -v
+      
       - name: Run JMeter Test
         run: |
           mkdir -p /tmp/results
