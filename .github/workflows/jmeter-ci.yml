@@ -116,11 +116,11 @@ jobs:
         run: |
           echo "Collecting JMeter report and cAdvisor metrics..."
           mkdir -p /tmp/final_reports
-          cp -r /tmp/results/report /tmp/final_reports/JMeter-Report
-          curl -s http://localhost:8080/metrics > /tmp/final_reports/cadvisor_metrics.txt
+          cp -r ./tmp/results/report ./tmp/final_reports/JMeter-Report
+          curl -s http://localhost:8080/metrics > ./tmp/final_reports/cadvisor_metrics.txt
       
       - name: Upload All Reports
         uses: actions/upload-artifact@v4
         with:
           name: Performance-Reports
-          path: /tmp/final_reports
+          path: ./tmp/final_reports
