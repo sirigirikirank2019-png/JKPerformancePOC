@@ -104,46 +104,48 @@ jobs:
           
       - name: Run JMeter Test
         run: |
-          mkdir -p /tmp/runtime_results && chmod -R 777 /tmp/runtime_results
-
+          mkdir -p reports/runtime/html
+          chmod -R 777 reports
+      
           # Backup old report if exists
-          if [ -d "/tmp/runtime_results/report" ]; then
-            mkdir -p /tmp/final_reports/backup_$(date +%Y%m%d_%H%M%S)
-            cp -r /tmp/runtime_results/report /tmp/final_reports/backup_$(date +%Y%m%d_%H%M%S) || true
+          if [ -d "reports/runtime/html" ]; then
+            mkdir -p reports/final/backup_$(date +%Y%m%d_%H%M%S)
+            cp -r reports/runtime/html reports/final/backup_$(date +%Y%m%d_%H%M%S)
             echo "✅ Old JMeter report backed up."
           fi
-
-          # Remove old report folder so JMeter can create a new one
-          rm -rf /tmp/runtime_results/report
-
+      
+          # Remove old HTML report folder
+          rm -rf reports/runtime/html
+      
           # Run JMeter
           jmeter -n -t ./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx \
-                 -l /tmp/runtime_results/results.jtl \
-                 -e -o /tmp/runtime_results/report
-
+                 -l reports/runtime/results.jtl \
+                 -e -o reports/runtime/html
+      
           echo "✅ JMeter test completed"
-          echo "Contents of /tmp/runtime_results:"
-          ls -R /tmp/runtime_results || true
-
+          echo "Contents of reports/runtime:"
+          ls -R reports/runtime || true
+      
       - name: Collect Reports
         run: |
           echo "Collecting JMeter report and cAdvisor metrics..."
-          mkdir -p /tmp/final_reports && chmod -R 777 /tmp/final_reports
-
+          mkdir -p reports/final
+          chmod -R 777 reports/final
+      
           # Copy JMeter HTML report
-          if [ -d "/tmp/runtime_results/report" ]; then
-            cp -r /tmp/runtime_results/report /tmp/final_reports/JMeter-Report
+          if [ -d "reports/runtime/html" ]; then
+            cp -r reports/runtime/html reports/final/JMeter-Report
             echo "✅ JMeter HTML report copied."
           else
             echo "⚠️ No JMeter HTML report found. Skipping copy."
           fi
-
-          # Copy cAdvisor metrics
-          curl -s http://localhost:8080/metrics > /tmp/final_reports/cadvisor_metrics.txt
+      
+          # Collect cAdvisor metrics
+          curl -s http://localhost:8080/metrics > reports/final/cadvisor_metrics.txt
           echo "✅ cAdvisor metrics collected."
-
+      
       - name: Upload All Reports
         uses: actions/upload-artifact@v4
         with:
           name: Performance-Reports
-          path: /tmp/final_reports
+          path: reports/final
