@@ -105,7 +105,7 @@ jobs:
       - name: Run JMeter Test
         run: |
           mkdir -p /tmp/results
-          jmeter -n -t ./P01_HTTPBinAPI_PT_SpikeTest.jmx \
+          jmeter -n -t ./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx \
                  -l /tmp/results/results.jtl \
                  -e -o /tmp/results/report
           echo "✅ JMeter test completed"
