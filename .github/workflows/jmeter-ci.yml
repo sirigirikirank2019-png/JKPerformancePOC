@@ -107,24 +107,22 @@ jobs:
           mkdir -p reports/runtime/html
           chmod -R 777 reports
       
-          # Backup old report if exists
-          if [ -d "reports/runtime/html" ]; then
-            mkdir -p reports/final/backup_$(date +%Y%m%d_%H%M%S)
-            cp -r reports/runtime/html reports/final/backup_$(date +%Y%m%d_%H%M%S)
-            echo "✅ Old JMeter report backed up."
+          echo "🔍 Checking JMeter test file existence..."
+          if [ ! -f "./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx" ]; then
+            echo "❌ JMeter test file not found!"
+            ls -R ./Scripts || true
+            exit 1
           fi
       
-          # Remove old HTML report folder
-          rm -rf reports/runtime/html
-      
-          # Run JMeter
+          echo "🏃 Running JMeter test..."
           jmeter -n -t ./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx \
                  -l reports/runtime/results.jtl \
-                 -e -o reports/runtime/html
+                 -e -o reports/runtime/html \
+                 -j reports/runtime/jmeter.log || (echo "❌ JMeter test failed" && exit 1)
       
           echo "✅ JMeter test completed"
-          echo "Contents of reports/runtime:"
-          ls -R reports/runtime || true
+          echo "📄 Showing generated files:"
+          ls -R reports/runtime
       
       - name: Collect Reports
         run: |
