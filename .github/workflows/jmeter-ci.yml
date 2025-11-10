@@ -101,33 +101,24 @@ jobs:
           $JMETER_HOME/bin/PluginsManagerCMD.sh install jpgc-casutg
       
           echo "✅ Plugin installation completed"
-
-      - name: Debug directory contents
-        run: |
-          pwd
-          ls -R
           
       - name: Run JMeter Test
         run: |
-          mkdir -p ./results
-          echo "🏃 Running JMeter Test Plan..."
-          jmeter -n -t ./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx -l ./results/results.jtl
-      
-      - name: Generate HTML Report
-        run: |
-          echo "📊 Generating JMeter HTML report..."
-          rm -rf ./results/report
-          jmeter -g ./results/results.jtl -o ./results/report
-      
+          mkdir -p /tmp/results
+          jmeter -n -t ./P01_HTTPBinAPI_PT_SpikeTest.jmx \
+                 -l /tmp/results/results.jtl \
+                 -e -o /tmp/results/report
+          echo "✅ JMeter test completed"
+
       - name: Collect Reports
         run: |
           echo "Collecting JMeter report and cAdvisor metrics..."
-          mkdir -p ./final_reports
-          cp -r ./results/report ./final_reports/JMeter-Report
-          curl -s http://localhost:8080/metrics > ./final_reports/cadvisor_metrics.txt
+          mkdir -p /tmp/final_reports
+          cp -r /tmp/results/report /tmp/final_reports/JMeter-Report
+          curl -s http://localhost:8080/metrics > /tmp/final_reports/cadvisor_metrics.txt
       
       - name: Upload All Reports
         uses: actions/upload-artifact@v4
         with:
           name: Performance-Reports
-          path: ./final_reports
+          path: /tmp/final_reports
