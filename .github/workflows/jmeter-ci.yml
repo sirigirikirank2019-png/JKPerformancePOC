@@ -104,7 +104,7 @@ jobs:
           
       - name: Run JMeter Test
         run: |
-          mkdir -p /stmp/results
+          sudo mkdir -p /stmp/results && sudo chmod -R 777 /stmp
           jmeter -n -t ./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx \
                  -l /stmp/results/results.jtl \
                  -e -o /stmp/results/report
@@ -113,7 +113,7 @@ jobs:
       - name: Collect Reports
         run: |
           echo "Collecting JMeter report and cAdvisor metrics..."
-          mkdir -p /stmp/final_reports
+          sudo mkdir -p /stmp/final_reports && sudo chmod -R 777 /stmp
           cp -r /stmp/results/report /stmp/final_reports/JMeter-Report
           curl -s http://localhost:8080/metrics > /stmp/final_reports/cadvisor_metrics.txt
       
