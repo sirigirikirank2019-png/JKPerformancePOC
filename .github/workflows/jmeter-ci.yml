@@ -104,7 +104,7 @@ jobs:
           
       - name: Run JMeter Test
         run: |
-          mkdir -p reports/runtime/html
+          mkdir -p ./reports/runtime/html
           chmod -R 777 reports
       
           echo "🔍 Checking JMeter test file existence..."
@@ -115,35 +115,32 @@ jobs:
           fi
       
           echo "🏃 Running JMeter test..."
-          jmeter -n -t ./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx \
-                 -l reports/runtime/results.jtl \
-                 -e -o reports/runtime/html \
-                 -j reports/runtime/jmeter.log || (echo "❌ JMeter test failed" && exit 1)
+          jmeter -n -t ./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx -l ./reports/runtime/results.jtl -e -o ./reports/runtime/html -j ./reports/runtime/jmeter.log || (echo "❌ JMeter test failed" && exit 1)
       
           echo "✅ JMeter test completed"
           echo "📄 Showing generated files:"
-          ls -R reports/runtime
+          ls -R ./reports/runtime
       
       - name: Collect Reports
         run: |
           echo "Collecting JMeter report and cAdvisor metrics..."
-          mkdir -p reports/final
+          mkdir -p ./reports/final
           chmod -R 777 reports/final
       
           # Copy JMeter HTML report
-          if [ -d "reports/runtime/html" ]; then
-            cp -r reports/runtime/html reports/final/JMeter-Report
+          if [ -d "./reports/runtime/html" ]; then
+            cp -r ./reports/runtime/html ./reports/final/JMeter-Report
             echo "✅ JMeter HTML report copied."
           else
             echo "⚠️ No JMeter HTML report found. Skipping copy."
           fi
       
           # Collect cAdvisor metrics
-          curl -s http://localhost:8080/metrics > reports/final/cadvisor_metrics.txt
+          curl -s http://localhost:8080/metrics > ./reports/final/cadvisor_metrics.txt
           echo "✅ cAdvisor metrics collected."
       
       - name: Upload All Reports
         uses: actions/upload-artifact@v4
         with:
           name: Performance-Reports
-          path: reports/final
+          path: ./reports/final
