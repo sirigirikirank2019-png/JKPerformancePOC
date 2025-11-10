@@ -104,7 +104,7 @@ jobs:
           
       - name: Run JMeter Test
         run: |
-          mkdir -p /tmp/results && chmod -R 777 /tmp
+          mkdir -p /tmp/results && chmod -R 777 /tmp/results
           jmeter -n -t ./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx \
                  -l /tmp/results/results.jtl \
                  -e -o /tmp/results/report || true
@@ -115,7 +115,7 @@ jobs:
       - name: Collect Reports
         run: |
           echo "Collecting JMeter report and cAdvisor metrics..."
-          mkdir -p /tmp/final_reports && chmod -R 777 /tmp
+          mkdir -p /tmp/final_reports && chmod -R 777 /tmp/final_reports
           if [ -d "/tmp/results/report" ]; then
             cp -r /tmp/results/report /tmp/final_reports/JMeter-Report
             echo "✅ JMeter report copied."
