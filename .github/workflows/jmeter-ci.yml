@@ -1,0 +1,124 @@
+name: JMeter CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash  # ensures all steps use bash (avoids exit code 127)
+
+jobs:
+  jmeter-test:
+    runs-on: ubuntu-22.04
+
+    services:
+      httpbin:
+        image: kennethreitz/httpbin
+        ports:
+          - 91:80
+      cadvisor:
+        image: gcr.io/cadvisor/cadvisor:latest
+        ports:
+          - 8080:8080
+        options: >-
+          --privileged
+          --volume=/:/rootfs:ro
+          --volume=/var/run:/var/run:rw
+          --volume=/sys:/sys:ro
+          --volume=/var/lib/docker/:/var/lib/docker:ro
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl wget unzip openjdk-17-jre-headless
+          echo "✅ Prerequisites installed"
+
+      - name: Wait for HTTPBin and cAdvisor to start
+        shell: bash
+        run: |
+          sudo apt update
+          sudo apt install -y curl
+      
+          echo "Waiting for HTTPBin service to start..."
+          for i in {1..15}; do
+            if curl -s -f http://localhost:91/get > /dev/null; then
+              echo "✅ HTTPBin is up!"
+              break
+            fi
+            echo "HTTPBin not ready yet... retrying ($i/15)"
+            sleep 5
+          done
+      
+          echo "Waiting for cAdvisor service to start..."
+          for i in {1..15}; do
+            if curl -s -f http://localhost:8080/metrics > /dev/null; then
+              echo "✅ cAdvisor is up!"
+              break
+            fi
+            echo "cAdvisor not ready yet... retrying ($i/15)"
+            sleep 5
+          done
+
+          # Final check
+          if ! curl -s http://localhost:91/get > /dev/null; then
+            echo "⚠️ HTTPBin service not responding, trying manual start..."
+            docker rm -f httpbin || true
+            docker run -d --name httpbin -p 91:80 kennethreitz/httpbin
+            sleep 5
+            curl -v http://localhost:91/get || (echo "❌ HTTPBin failed to start" && exit 1)
+          fi
+
+      - name: Install JMeter
+        run: |
+          wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.zip
+          unzip -q apache-jmeter-5.6.3.zip -d /opt/
+          sudo ln -sf /opt/apache-jmeter-5.6.3/bin/jmeter /usr/local/bin/jmeter
+          jmeter -v
+
+      - name: Install JMeter Plugins (Ultimate Thread Group)
+        run: |
+          JMETER_HOME=/opt/apache-jmeter-5.6.3
+          echo "📦 Installing JMeter Plugins Manager..."
+          wget -q https://jmeter-plugins.org/get/ -O /tmp/JMeterPluginsManager.jar
+          wget -q https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar -O /tmp/cmdrunner-2.3.jar
+      
+          mkdir -p $JMETER_HOME/lib/ext
+          cp /tmp/JMeterPluginsManager.jar $JMETER_HOME/lib/ext/
+          cp /tmp/cmdrunner-2.3.jar $JMETER_HOME/lib/
+      
+          echo "⚙️  Installing PluginManagerCMD..."
+          java -cp $JMETER_HOME/lib/ext/JMeterPluginsManager.jar org.jmeterplugins.repository.PluginManagerCMDInstaller
+      
+          echo "🧩 Installing Ultimate Thread Group plugin..."
+          $JMETER_HOME/bin/PluginsManagerCMD.sh install jpgc-casutg
+      
+          echo "✅ Plugin installation completed"
+          
+      - name: Run JMeter Test
+        run: |
+          mkdir -p /tmp/results
+          jmeter -n \
+            -t ./Scritps/PT01_LoadTest_HTTPMethods.jmx \
+            -l /tmp/results/results.jtl \
+            -e -o /tmp/results/report
+
+      - name: Collect Reports
+        run: |
+          echo "Collecting JMeter report and cAdvisor metrics..."
+          mkdir -p /tmp/final_reports
+          cp -r /tmp/results/report /tmp/final_reports/JMeter-Report
+          curl -s http://localhost:8080/metrics > /tmp/final_reports/cadvisor_metrics.txt
+      
+      - name: Upload All Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: Performance-Reports
+          path: /tmp/final_reports
