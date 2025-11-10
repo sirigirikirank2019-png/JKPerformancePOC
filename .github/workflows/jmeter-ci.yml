@@ -104,21 +104,21 @@ jobs:
           
       - name: Run JMeter Test
         run: |
-          mkdir -p /tmp/results
+          mkdir -p /stmp/results
           jmeter -n -t ./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx \
-                 -l /tmp/results/results.jtl \
-                 -e -o /tmp/results/report
+                 -l /stmp/results/results.jtl \
+                 -e -o /stmp/results/report
           echo "✅ JMeter test completed"
 
       - name: Collect Reports
         run: |
           echo "Collecting JMeter report and cAdvisor metrics..."
-          mkdir -p /tmp/final_reports
-          cp -r /tmp/results/report /tmp/final_reports/JMeter-Report
-          curl -s http://localhost:8080/metrics > /tmp/final_reports/cadvisor_metrics.txt
+          mkdir -p /stmp/final_reports
+          cp -r /stmp/results/report /stmp/final_reports/JMeter-Report
+          curl -s http://localhost:8080/metrics > /stmp/final_reports/cadvisor_metrics.txt
       
       - name: Upload All Reports
         uses: actions/upload-artifact@v4
         with:
           name: Performance-Reports
-          path: /tmp/final_reports
+          path: /stmp/final_reports
