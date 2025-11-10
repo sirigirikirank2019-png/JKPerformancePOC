@@ -109,32 +109,16 @@ jobs:
           
       - name: Run JMeter Test
         run: |
+          mkdir -p /tmp/results
           echo "Running JMeter Test Plan..."
-          jmeter -n -t ./Scripts/PT01_LoadTest_HTTPMethods.jmx -l results.jtl -e -o ResultsReport
+          jmeter -n -t ./Scripts/PT01_LoadTest_HTTPMethods.jmx -l /tmp/results/results.jtl -e -o /tmp/results/JMeter-Report/ResultsReport
 
       - name: Collect Reports
         run: |
           echo "Collecting JMeter report and cAdvisor metrics..."
-      
-          # Ensure all directories exist
-          mkdir -p ./tmp/final_reports/JMeter-Report
-      
-          # Copy JMeter report
-          if [ -d "./tmp/results/report" ]; then
-            cp -r ./tmp/results/report/* ./tmp/final_reports/JMeter-Report/
-          else
-            echo "⚠️ JMeter report not found at ./tmp/results/report"
-          fi
-      
-          # Collect cAdvisor metrics if available
-          if curl -s --head http://localhost:8080/metrics | grep "200 OK" > /dev/null; then
-            curl -s http://localhost:8080/metrics > ./tmp/final_reports/cadvisor_metrics.txt
-          else
-            echo "⚠️ cAdvisor not reachable on port 8080 — skipping metrics collection."
-          fi
-      
-          echo "✅ Final reports structure:"
-          ls -R ./tmp/final_reports
+          mkdir -p /tmp/final_reports
+          cp -r /tmp/results/report /tmp/final_reports/JMeter-Report
+          curl -s http://localhost:8080/metrics > /tmp/final_reports/cadvisor_metrics.txt
       
       - name: Upload All Reports
         uses: actions/upload-artifact@v4
