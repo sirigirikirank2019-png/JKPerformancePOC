@@ -111,7 +111,7 @@ jobs:
         run: |
           mkdir -p /tmp/results
           echo "Running JMeter Test Plan..."
-          jmeter -n -t ./Scripts/PT01_LoadTest_HTTPMethods.jmx -l /tmp/results/results.jtl -e -o /tmp/results/JMeter-Report/ResultsReport
+          jmeter -n -t ./Scripts/PT01_LoadTest_HTTPMethods.jmx -l /tmp/results/results.jtl -e -o /tmp/results/report
 
       - name: Collect Reports
         run: |
