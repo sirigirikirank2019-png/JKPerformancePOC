@@ -104,26 +104,44 @@ jobs:
           
       - name: Run JMeter Test
         run: |
-          mkdir -p /tmp/results && chmod -R 777 /tmp/results
+          mkdir -p /tmp/runtime_results && chmod -R 777 /tmp/runtime_results
+
+          # Backup old report if exists
+          if [ -d "/tmp/runtime_results/report" ]; then
+            mkdir -p /tmp/final_reports/backup_$(date +%Y%m%d_%H%M%S)
+            cp -r /tmp/runtime_results/report /tmp/final_reports/backup_$(date +%Y%m%d_%H%M%S) || true
+            echo "✅ Old JMeter report backed up."
+          fi
+
+          # Remove old report folder so JMeter can create a new one
+          rm -rf /tmp/runtime_results/report
+
+          # Run JMeter
           jmeter -n -t ./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx \
-                 -l /tmp/results/results.jtl \
-                 -e -o /tmp/results/report || true
+                 -l /tmp/runtime_results/results.jtl \
+                 -e -o /tmp/runtime_results/report
+
           echo "✅ JMeter test completed"
-          echo "Contents of /tmp/results:"
-          ls -R /tmp/results || true
-      
+          echo "Contents of /tmp/runtime_results:"
+          ls -R /tmp/runtime_results || true
+
       - name: Collect Reports
         run: |
           echo "Collecting JMeter report and cAdvisor metrics..."
           mkdir -p /tmp/final_reports && chmod -R 777 /tmp/final_reports
-          if [ -d "/tmp/results/report" ]; then
-            cp -r /tmp/results/report /tmp/final_reports/JMeter-Report
-            echo "✅ JMeter report copied."
+
+          # Copy JMeter HTML report
+          if [ -d "/tmp/runtime_results/report" ]; then
+            cp -r /tmp/runtime_results/report /tmp/final_reports/JMeter-Report
+            echo "✅ JMeter HTML report copied."
           else
             echo "⚠️ No JMeter HTML report found. Skipping copy."
           fi
+
+          # Copy cAdvisor metrics
           curl -s http://localhost:8080/metrics > /tmp/final_reports/cadvisor_metrics.txt
-      
+          echo "✅ cAdvisor metrics collected."
+
       - name: Upload All Reports
         uses: actions/upload-artifact@v4
         with:
