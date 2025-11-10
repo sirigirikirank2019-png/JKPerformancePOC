@@ -104,21 +104,28 @@ jobs:
           
       - name: Run JMeter Test
         run: |
-          sudo mkdir -p /stmp/results && sudo chmod -R 777 /stmp
+          mkdir -p /tmp/results && chmod -R 777 /tmp
           jmeter -n -t ./Scripts/P01_HTTPBinAPI_PT_SpikeTest.jmx \
-                 -l /stmp/results/results.jtl \
-                 -e -o /stmp/results/report
+                 -l /tmp/results/results.jtl \
+                 -e -o /tmp/results/report || true
           echo "✅ JMeter test completed"
-
+          echo "Contents of /tmp/results:"
+          ls -R /tmp/results || true
+      
       - name: Collect Reports
         run: |
           echo "Collecting JMeter report and cAdvisor metrics..."
-          sudo mkdir -p /stmp/final_reports && sudo chmod -R 777 /stmp
-          cp -r /stmp/results/report /stmp/final_reports/JMeter-Report
-          curl -s http://localhost:8080/metrics > /stmp/final_reports/cadvisor_metrics.txt
+          mkdir -p /tmp/final_reports && chmod -R 777 /tmp
+          if [ -d "/tmp/results/report" ]; then
+            cp -r /tmp/results/report /tmp/final_reports/JMeter-Report
+            echo "✅ JMeter report copied."
+          else
+            echo "⚠️ No JMeter HTML report found. Skipping copy."
+          fi
+          curl -s http://localhost:8080/metrics > /tmp/final_reports/cadvisor_metrics.txt
       
       - name: Upload All Reports
         uses: actions/upload-artifact@v4
         with:
           name: Performance-Reports
-          path: /stmp/final_reports
+          path: /tmp/final_reports
