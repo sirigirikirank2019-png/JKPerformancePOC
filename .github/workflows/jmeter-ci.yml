@@ -101,6 +101,11 @@ jobs:
           $JMETER_HOME/bin/PluginsManagerCMD.sh install jpgc-casutg
       
           echo "✅ Plugin installation completed"
+
+      - name: Debug directory contents
+        run: |
+          pwd
+          ls -R
           
       - name: Run JMeter Test
         run: |
