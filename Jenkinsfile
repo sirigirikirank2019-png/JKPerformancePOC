@@ -21,6 +21,7 @@ pipeline {
         stage('Run JMeter Test') {
             steps {
                 bat """
+                set JAVA_HOME=C:\\Program Files\\Java\\jdk-17  // Ensure JMeter uses the correct Java version
                 cd "%JMETER_HOME%\\bin"
                 jmeter -n ^
                        -t "%JMETER_TEST%" ^
