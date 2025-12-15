@@ -18,6 +18,13 @@ pipeline {
             }
         }
 
+        stage('Verify Java Version') {
+            steps {
+                echo "JAVA_HOME is: ${env.JAVA_HOME}"
+                bat 'java -version'
+            }
+        }
+
         stage('Run JMeter Test') {
             steps {
                 bat """
