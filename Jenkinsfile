@@ -29,6 +29,10 @@ pipeline {
         stage('Run JMeter Test') {
             steps {
                 echo "Running JMeter Test..."
+
+                // Ensure the results directory exists
+                bat 'if not exist "%JMETER_RESULTS%" mkdir "%JMETER_RESULTS%"'
+
                 bat """
                 set PATH=%JAVA_HOME%\\bin;%PATH%
                 echo "JAVA_HOME is set to: %JAVA_HOME%"
@@ -38,14 +42,17 @@ pipeline {
                        -t "%JMETER_TEST%" ^
                        -l "%JMETER_RESULTS%\\results_%BUILD_NUMBER%.jtl" ^
                        -e ^
-                       -o "%JMETER_RESULTS%\\report_%BUILD_NUMBER%" 2>&1 > jmeter_output.log
+                       -o "%JMETER_RESULTS%\\report_%BUILD_NUMBER%" 2>&1 1>jmeter_output.log
                 """
             }
         }
 
         stage('Archive Results') {
             steps {
+                // Archive JMeter result files
                 archiveArtifacts artifacts: 'tmp/res/**/*.jtl', allowEmptyArchive: true
+                // Archive JMeter output log
+                archiveArtifacts artifacts: 'jmeter_output.log', allowEmptyArchive: true
             }
         }
     }
@@ -56,7 +63,7 @@ pipeline {
         }
         failure {
             echo 'Performance test FAILED'
-            // You can also archive the output log for debugging
+            // Archive the log file in case of failure
             archiveArtifacts artifacts: 'jmeter_output.log', allowEmptyArchive: true
         }
     }
