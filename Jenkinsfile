@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17' //C:\Program Files\Java\jdk-17
         JMETER_HOME = 'C:\\Users\\sreek\\Desktop\\apache-jmeter-5.6.3'  // Update with your actual JMeter installation path
         // Set the JMeter test plan path in the Git repository
         JMETER_TEST = "${WORKSPACE}/Scripts/P01_HTTPBinAPI_PT_StreeTest.jmx"
