@@ -38,7 +38,7 @@ pipeline {
                        -t "%JMETER_TEST%" ^
                        -l "%JMETER_RESULTS%\\results_%BUILD_NUMBER%.jtl" ^
                        -e ^
-                       -o "%JMETER_RESULTS%\\report_%BUILD_NUMBER%" 2>&1 | tee jmeter_output.log
+                       -o "%JMETER_RESULTS%\\report_%BUILD_NUMBER%" 2>&1 > jmeter_output.log
                 """
             }
         }
@@ -56,6 +56,8 @@ pipeline {
         }
         failure {
             echo 'Performance test FAILED'
+            // You can also archive the output log for debugging
+            archiveArtifacts artifacts: 'jmeter_output.log', allowEmptyArchive: true
         }
     }
 }
