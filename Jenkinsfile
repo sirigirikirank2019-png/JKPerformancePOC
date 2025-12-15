@@ -2,11 +2,10 @@ pipeline {
     agent any
 
     environment {
-        // Set Java and JMeter environment variables
-        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17'  // Adjust to your actual Java path
-        JMETER_HOME = 'C:\\Users\\sreek\\Desktop\\apache-jmeter-5.6.3'  // Adjust to your JMeter path
-        JMETER_TEST = "${WORKSPACE}/Scripts/P01_HTTPBinAPI_PT_StreeTest.jmx"  // Adjust to your test plan path
-        JMETER_RESULTS = "${WORKSPACE}/tmp/res"  // Folder for JMeter results
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17'
+        JMETER_HOME = 'C:\\Users\\sreek\\Desktop\\apache-jmeter-5.6.3'
+        JMETER_TEST = "${WORKSPACE}/Scripts/P01_HTTPBinAPI_PT_StreeTest.jmx"
+        JMETER_RESULTS = "${WORKSPACE}/tmp/res"
     }
 
     stages {
@@ -29,22 +28,24 @@ pipeline {
 
         stage('Run JMeter Test') {
             steps {
+                echo "Running JMeter Test..."
                 bat """
-                set PATH=%JAVA_HOME%\\bin;%PATH%  // Ensure Java is in the PATH
+                set PATH=%JAVA_HOME%\\bin;%PATH%
+                echo "JAVA_HOME is set to: %JAVA_HOME%"
+                echo "JMETER_HOME is set to: %JMETER_HOME%"
                 cd "%JMETER_HOME%\\bin"
                 jmeter -n ^
                        -t "%JMETER_TEST%" ^
                        -l "%JMETER_RESULTS%\\results_%BUILD_NUMBER%.jtl" ^
                        -e ^
-                       -o "%JMETER_RESULTS%\\report_%BUILD_NUMBER%"
+                       -o "%JMETER_RESULTS%\\report_%BUILD_NUMBER%" 2>&1 | tee jmeter_output.log
                 """
             }
         }
 
         stage('Archive Results') {
             steps {
-                // Archive the JMeter results after the test run
-                archiveArtifacts artifacts: '**/tmp/res/**', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'tmp/res/**/*.jtl', allowEmptyArchive: true
             }
         }
     }
