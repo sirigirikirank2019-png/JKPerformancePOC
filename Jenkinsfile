@@ -2,18 +2,17 @@ pipeline {
     agent any
 
     environment {
-        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17' //C:\Program Files\Java\jdk-17
-        JMETER_HOME = 'C:\\Users\\sreek\\Desktop\\apache-jmeter-5.6.3'  // Update with your actual JMeter installation path
-        // Set the JMeter test plan path in the Git repository
-        JMETER_TEST = "${WORKSPACE}/Scripts/P01_HTTPBinAPI_PT_StreeTest.jmx"
-        // Set the results directory within Jenkins workspace (tmp/res)
-        JMETER_RESULTS = "${WORKSPACE}/tmp/res"  
+        // Set Java and JMeter environment variables
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17'  // Adjust to your actual Java path
+        JMETER_HOME = 'C:\\Users\\sreek\\Desktop\\apache-jmeter-5.6.3'  // Adjust to your JMeter path
+        JMETER_TEST = "${WORKSPACE}/Scripts/P01_HTTPBinAPI_PT_StreeTest.jmx"  // Adjust to your test plan path
+        JMETER_RESULTS = "${WORKSPACE}/tmp/res"  // Folder for JMeter results
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                // Checkout the code from your Git repository
+                // Checkout code from Git repository
                 git branch: 'main', url: 'https://github.com/sirigirikirank2019-png/JKPerformancePOC.git'
             }
         }
@@ -21,14 +20,17 @@ pipeline {
         stage('Verify Java Version') {
             steps {
                 echo "JAVA_HOME is: ${env.JAVA_HOME}"
-                bat 'java -version'
+                bat """
+                set PATH=%JAVA_HOME%\\bin;%PATH%
+                java -version
+                """
             }
         }
 
         stage('Run JMeter Test') {
             steps {
                 bat """
-                set JAVA_HOME=C:\\Program Files\\Java\\jdk-17  // Ensure JMeter uses the correct Java version
+                set PATH=%JAVA_HOME%\\bin;%PATH%  // Ensure Java is in the PATH
                 cd "%JMETER_HOME%\\bin"
                 jmeter -n ^
                        -t "%JMETER_TEST%" ^
@@ -41,8 +43,8 @@ pipeline {
 
         stage('Archive Results') {
             steps {
-                // Archive the results from the 'tmp/res' folder within Jenkins workspace
-                archiveArtifacts artifacts: 'tmp/res/**', allowEmptyArchive: true
+                // Archive the JMeter results after the test run
+                archiveArtifacts artifacts: '**/tmp/res/**', allowEmptyArchive: true
             }
         }
     }
